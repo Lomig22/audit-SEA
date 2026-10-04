@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulateur d'acquisition — Payment Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit: #0F1C3F;
+    --accent: #2F5BEA;
+    --fond: #F5F7FB;
+    --carte: #FDFDFE;
+    --bordure: #DCE3F0;
+    --texte2: #4A5568;
+    --orange: #E8891C;
+    --orange-clair: #FFF1DF;
+    --accent-clair: #EAF0FE;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--fond); color: var(--nuit);
+    font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 17px; line-height: 1.45;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* En-tête */
+  header {
+    background: var(--carte); border-bottom: 1px solid var(--bordure);
+    padding: 18px 32px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px 28px;
+  }
+  header h1 { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -0.01em; }
+  header h1 span { color: var(--accent); }
+  .prospect-field { display: flex; align-items: center; gap: 10px; flex: 1 1 280px; }
+  .prospect-field label { font-size: 16px; color: var(--texte2); white-space: nowrap; }
+  .prospect-field input { flex: 1; max-width: 360px; }
+  .header-actions { display: flex; gap: 10px; margin-left: auto; }
+
+  /* Boutons */
+  button { font: inherit; cursor: pointer; }
+  .btn {
+    border: 1px solid var(--bordure); background: var(--carte); color: var(--nuit);
+    padding: 10px 16px; border-radius: 10px; font-size: 16px; font-weight: 600;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2549c4; color: #fff; }
+  .linkbtn {
+    background: none; border: none; color: var(--accent); padding: 0; font-size: 15px;
+    text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  /* Mise en page */
+  main {
+    display: grid; grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
+    gap: 28px; padding: 28px 32px 40px; max-width: 1680px; margin: 0 auto; align-items: start;
+  }
+  .panel-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--texte2); margin: 0 0 12px; }
+  .card {
+    background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--radius);
+    padding: 22px 24px; margin-bottom: 18px;
+  }
+  .saisie { position: sticky; top: 16px; }
+
+  /* Champs */
+  input[type=text] {
+    font: inherit; font-size: 18px; color: var(--nuit); background: #fff;
+    border: 1px solid var(--bordure); border-radius: 10px; padding: 9px 12px; width: 100%;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field > label, .field-label { display: block; font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+  .hint { font-size: 15px; color: var(--texte2); margin-top: 6px; }
+  .unit-input { position: relative; display: flex; align-items: center; }
+  .unit-input input { padding-right: 52px; }
+  .unit-input .unit { position: absolute; right: 12px; color: var(--texte2); font-size: 16px; pointer-events: none; }
+
+  .segmented { display: flex; background: var(--fond); border: 1px solid var(--bordure); border-radius: 12px; padding: 4px; }
+  .segmented button {
+    flex: 1; border: none; background: none; padding: 10px 8px; border-radius: 9px;
+    font-size: 16px; font-weight: 600; color: var(--texte2);
+  }
+  .segmented button.active { background: var(--nuit); color: #fff; }
+
+  .key-card { border: 2px solid var(--accent); }
+  .key-card .field > label, .key-card .field-label { font-size: 18px; }
+  .key-card input.big { font-size: 26px; font-weight: 700; padding: 10px 14px; }
+
+  .slider-row { display: flex; align-items: center; gap: 14px; }
+  .slider-row input[type=range] { flex: 1; }
+  .slider-row .unit-input { width: 120px; flex: none; }
+  input[type=range] { accent-color: var(--accent); height: 28px; cursor: pointer; }
+
+  .bien-box { margin-top: 12px; padding: 14px; background: var(--accent-clair); border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .bien-box label { font-size: 15px; font-weight: 600; display: block; margin-bottom: 6px; }
+
+  .budget-mois { margin-top: 10px; font-size: 17px; color: var(--texte2); }
+  .budget-mois strong { color: var(--nuit); font-size: 20px; }
+
+  details.avance > summary {
+    cursor: pointer; font-size: 17px; font-weight: 700; list-style: none; display: flex; justify-content: space-between; align-items: center;
+  }
+  details.avance > summary::-webkit-details-marker { display: none; }
+  details.avance > summary::after { content: "+"; font-size: 24px; color: var(--accent); line-height: 1; }
+  details.avance[open] > summary::after { content: "−"; }
+  details.avance[open] > summary { margin-bottom: 18px; }
+  .scen-grid { display: grid; grid-template-columns: 1.4fr repeat(3, 1fr); gap: 8px 8px; align-items: center; margin-bottom: 18px; }
+  .scen-grid .h { font-size: 14px; color: var(--texte2); font-weight: 600; text-align: center; }
+  .scen-grid .rl { font-size: 15px; font-weight: 600; }
+  .scen-grid input { font-size: 16px; padding: 7px 8px; text-align: center; }
+  .scen-grid .ro { font-size: 16px; text-align: center; color: var(--texte2); padding: 7px 0; background: var(--fond); border-radius: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid2 .field { margin-bottom: 0; }
+  .grid2 label { font-size: 15px !important; }
+
+  /* Résultats */
+  .results-title { font-size: 28px; font-weight: 800; margin: 0 0 16px; letter-spacing: -0.01em; }
+  .bandeau {
+    background: var(--nuit); color: #fff; border-radius: var(--radius); padding: 28px 32px; margin-bottom: 18px;
+    font-size: 27px; line-height: 1.4; font-weight: 500;
+  }
+  .bandeau strong { color: #fff; font-weight: 800; }
+  .bandeau .hl { color: #9FB6FF; font-weight: 800; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+  .kpi { background: var(--carte); border: 1px solid var(--bordure); border-radius: var(--radius); padding: 18px 20px; }
+  .kpi .lbl { font-size: 16px; color: var(--texte2); font-weight: 600; }
+  .kpi .val { font-size: 48px; font-weight: 800; line-height: 1.1; margin-top: 6px; letter-spacing: -0.02em; white-space: nowrap; }
+  .kpi .sub { font-size: 15px; color: var(--texte2); margin-top: 4px; }
+
+  .seuil { border: 2px solid var(--orange); background: linear-gradient(0deg, var(--carte), var(--carte)); padding: 26px 30px; }
+  .seuil .tag { display: inline-block; background: var(--orange); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; margin-bottom: 12px; }
+  .seuil .main { font-size: 26px; font-weight: 600; line-height: 1.35; }
+  .seuil .main .bignum { font-size: 56px; font-weight: 800; color: var(--orange); line-height: 1; letter-spacing: -0.02em; vertical-align: -4px; }
+  .seuil .details { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 17px; color: var(--texte2); }
+  .seuil .details strong { color: var(--nuit); }
+
+  .section-h { font-size: 20px; font-weight: 700; margin: 0 0 14px; }
+
+  .funnel { display: flex; align-items: stretch; gap: 0; }
+  .f-step { flex: 1 1 0; background: var(--accent-clair); border-radius: 12px; padding: 16px 12px; text-align: center; min-width: 0; }
+  .f-step .n { font-size: 40px; font-weight: 800; line-height: 1.1; }
+  .f-step .l { font-size: 16px; color: var(--texte2); font-weight: 600; }
+  .f-step.last { background: var(--nuit); color: #fff; }
+  .f-step.last .l { color: #C9D4F5; }
+  .f-arrow { flex: 0 0 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--accent); }
+  .f-arrow .rate { font-size: 17px; font-weight: 700; }
+  .f-arrow svg { width: 52px; height: 18px; }
+
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { width: 100%; border-collapse: collapse; font-size: 17px; font-variant-numeric: tabular-nums; }
+  th { text-align: right; vertical-align: bottom; font-size: 14px; font-weight: 700; color: var(--texte2); padding: 10px 10px; border-bottom: 2px solid var(--bordure); }
+  th:first-child, td:first-child { text-align: left; }
+  td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--bordure); white-space: nowrap; }
+  tr.central td { font-weight: 800; }
+  tr.current td { background: var(--orange-clair); }
+  tr.current td:first-child { box-shadow: inset 4px 0 0 var(--orange); }
+  td .muted { color: var(--texte2); font-weight: 400; font-size: 15px; }
+
+  .alerts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+  .alert { display: flex; gap: 12px; align-items: flex-start; background: var(--orange-clair); border: 1px solid #F3C98F; border-left: 5px solid var(--orange); border-radius: 10px; padding: 14px 16px; font-size: 17px; font-weight: 500; }
+  .alert .ic { color: var(--orange); font-weight: 800; font-size: 20px; line-height: 1.2; }
+
+  .mention { font-size: 15px; color: var(--texte2); border-top: 1px solid var(--bordure); padding-top: 16px; margin-top: 8px; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--nuit); color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 16px; opacity: 0; transition: .2s; pointer-events: none; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  main > section { min-width: 0; }
+  [hidden] { display: none !important; }
+
+  @media (max-width: 1280px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 980px) {
+    main { grid-template-columns: minmax(0, 1fr); padding: 16px; gap: 8px; }
+    .saisie { position: static; }
+    header { padding: 14px 16px; }
+    header h1 { font-size: 22px; }
+    .header-actions { margin-left: 0; width: 100%; }
+    .header-actions .btn { flex: 1; }
+    .bandeau { font-size: 22px; padding: 22px; }
+    .funnel { flex-direction: column; }
+    .f-arrow { flex: 0 0 auto; flex-direction: row; gap: 10px; padding: 6px 0; }
+    .f-arrow svg { transform: rotate(90deg); width: 30px; }
+  }
+  @media (max-width: 560px) {
+    .kpis { grid-template-columns: 1fr; }
+    .kpi .val { font-size: 48px; }
+    .card { padding: 18px 16px; }
+    .seuil { padding: 20px 18px; }
+    .seuil .main { font-size: 22px; }
+    .bien-box, .grid2 { grid-template-columns: 1fr; }
+    .prospect-field { flex-wrap: wrap; }
+    .prospect-field input { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Simulateur d'acquisition — <span>Payment Flow</span></h1>
+  <div class="prospect-field">
+    <label for="f-prospect">Nom du prospect</label>
+    <input type="text" id="f-prospect" data-key="prospect" data-type="text" placeholder="ex. Agence Dupont" autocomplete="off">
+  </div>
+  <div class="header-actions">
+    <button class="btn" id="btn-reset" type="button">Réinitialiser</button>
+    <button class="btn btn-primary" id="btn-copy" type="button">Copier le récap</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ SAISIE ============ -->
+  <section class="saisie" aria-label="Saisie">
+    <h2 class="panel-title">Saisie</h2>
+
+    <div class="card">
+      <span class="field-label">Secteur</span>
+      <div class="segmented" role="tablist">
+        <button type="button" data-secteur="immo">Immobilier</button>
+        <button type="button" data-secteur="btp">Artisan / BTP / services</button>
+      </div>
+    </div>
+
+    <div class="card key-card">
+      <div class="field">
+        <label for="f-ticket">Ticket moyen <span style="font-weight:400;color:var(--texte2)" id="ticket-sub"></span></label>
+        <div class="unit-input"><input type="text" inputmode="decimal" class="big" id="f-ticket" data-key="ticket"><span class="unit">€</span></div>
+        <div id="bien-zone">
+          <div class="hint"><button type="button" class="linkbtn" id="btn-bien">Calculer depuis le prix du bien</button></div>
+          <div class="bien-box" id="bien-box" hidden>
+            <div>
+              <label for="f-prixBien">Prix moyen du bien</label>
+              <div class="unit-input"><input type="text" inputmode="decimal" id="f-prixBien" data-key="prixBien"><span class="unit">€</span></div>
+            </div>
+            <div>
+              <label for="f-honoraires">Honoraires TTC</label>
+              <div class="unit-input"><input type="text" inputmode="decimal" id="f-honoraires" data-key="honoraires"><span class="unit">%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f-closing">Sur 10 RDV, combien deviennent un client signé ?</label>
+        <div class="slider-row">
+          <input type="range" min="5" max="90" step="1" id="s-closing" data-slider="closing" aria-label="Taux de closing">
+          <div class="unit-input"><input type="text" inputmode="decimal" class="big" id="f-closing" data-key="closing"><span class="unit">%</span></div>
+        </div>
+        <div class="hint">Un prospect venu de Google compare souvent 2-3 entreprises : son taux est en général plus bas que sur la recommandation.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="f-budgetJour">Budget Google par jour</label>
+        <div class="slider-row">
+          <input type="range" min="5" max="100" step="1" id="s-budgetJour" data-slider="budgetJour" aria-label="Budget Google par jour">
+          <div class="unit-input"><input type="text" inputmode="decimal" class="big" id="f-budgetJour" data-key="budgetJour" style="font-size:22px"><span class="unit">€/j</span></div>
+        </div>
+        <div class="budget-mois">Budget Google par mois : <strong class="num" id="o-budgetMois"></strong></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <details class="avance" id="avance">
+        <summary>Réglages avancés</summary>
+
+        <div class="scen-grid">
+          <span></span><span class="h">Prudent</span><span class="h">Central</span><span class="h">Haut</span>
+
+          <span class="rl">Coût par demande (€)</span>
+          <input type="text" inputmode="decimal" data-key="cplP" aria-label="CPL prudent">
+          <input type="text" inputmode="decimal" data-key="cplC" aria-label="CPL central">
+          <input type="text" inputmode="decimal" data-key="cplH" aria-label="CPL haut">
+
+          <span class="rl">Demande → RDV (%)</span>
+          <input type="text" inputmode="decimal" data-key="rdvP" aria-label="Demande vers RDV prudent">
+          <input type="text" inputmode="decimal" data-key="rdvC" aria-label="Demande vers RDV central">
+          <input type="text" inputmode="decimal" data-key="rdvH" aria-label="Demande vers RDV haut">
+
+          <span class="rl">RDV → signé (%)</span>
+          <span class="ro num" id="o-closingP"></span>
+          <span class="ro num" id="o-closingC"></span>
+          <span class="ro num" id="o-closingH"></span>
+
+          <span class="rl e4row">Mandat → vente (%)</span>
+          <input class="e4row" type="text" inputmode="decimal" data-key="e4P" aria-label="Mandat vers vente prudent">
+          <input class="e4row" type="text" inputmode="decimal" data-key="e4C" aria-label="Mandat vers vente central">
+          <input class="e4row" type="text" inputmode="decimal" data-key="e4H" aria-label="Mandat vers vente haut">
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label for="f-setup">Frais de setup</label>
+            <div class="unit-input"><input type="text" inputmode="decimal" id="f-setup" data-key="setup"><span class="unit">€</span></div>
+          </div>
+          <div class="field">
+            <label for="f-commission">Commission Payment Flow</label>
+            <div class="unit-input"><input type="text" inputmode="decimal" id="f-commission" data-key="commission"><span class="unit">% budget</span></div>
+          </div>
+          <div class="field">
+            <label for="f-engagement">Engagement</label>
+            <div class="unit-input"><input type="text" inputmode="decimal" id="f-engagement" data-key="engagement"><span class="unit">mois</span></div>
+          </div>
+          <div class="field">
+            <label for="f-delai">Délai avant encaissement</label>
+            <div class="unit-input"><input type="text" inputmode="decimal" id="f-delai" data-key="delai"><span class="unit">mois</span></div>
+          </div>
+          <div class="field" style="grid-column: 1 / -1">
+            <label for="f-caActuel">CA mensuel actuel du prospect (optionnel)</label>
+            <div class="unit-input"><input type="text" inputmode="decimal" id="f-caActuel" data-key="caActuel" data-optional="1" placeholder="—"><span class="unit">€/mois</span></div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ============ RÉSULTATS ============ -->
+  <section aria-label="Résultats">
+    <h2 class="panel-title">Résultats</h2>
+    <h3 class="results-title" id="o-titre"></h3>
+
+    <div class="bandeau" id="o-bandeau"></div>
+
+    <div class="alerts" id="o-alerts"></div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="lbl">Demandes par mois</div><div class="val num" id="k-demandes"></div><div class="sub" id="k-demandes-sub"></div></div>
+      <div class="kpi"><div class="lbl" id="k-signes-lbl"></div><div class="val num" id="k-signes"></div><div class="sub" id="k-signes-sub"></div></div>
+      <div class="kpi"><div class="lbl">CA mensuel généré</div><div class="val num" id="k-ca"></div><div class="sub" id="k-ca-sub"></div></div>
+      <div class="kpi"><div class="lbl" id="k-cout-lbl"></div><div class="val num" id="k-cout"></div><div class="sub" id="k-cout-sub"></div></div>
+    </div>
+
+    <div class="card seuil">
+      <div class="tag">Seuil de rentabilité</div>
+      <div class="main" id="o-seuil"></div>
+      <div class="details">
+        <div id="o-seuil-ratio"></div>
+        <div id="o-seuil-closing"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 class="section-h">Parcours mensuel <span style="font-weight:400;color:var(--texte2);font-size:16px">· scénario central</span></h4>
+      <div class="funnel" id="o-funnel"></div>
+    </div>
+
+    <div class="card">
+      <h4 class="section-h">Scénarios</h4>
+      <div class="table-wrap"><table id="t-scen"></table></div>
+    </div>
+
+    <div class="card">
+      <h4 class="section-h">Selon le budget Google</h4>
+      <div class="table-wrap"><table id="t-budget"></table></div>
+    </div>
+
+    <p class="mention">Estimations indicatives basées sur les hypothèses saisies. Payment Flow garantit des demandes qualifiées (setup remboursé si aucune demande qualifiée en 60 jours), pas un nombre de ventes.</p>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+/* ---------- Formatage français ---------- */
+const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const nfMax1 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 });
+const fmtInt = x => isFinite(x) ? nf0.format(Math.round(x)) : '—';
+const fmt1 = x => isFinite(x) ? nf1.format(Math.round(x * 10) / 10) : '—';
+const fmtMax1 = x => isFinite(x) ? nfMax1.format(x) : '—';
+const eur = x => isFinite(x) ? nf0.format(Math.round(x)) + ' €' : '—';
+const eur100 = x => isFinite(x) ? nf0.format(Math.round(x / 100) * 100) + ' €' : '—';
+const pct = x => isFinite(x) ? nfMax1.format(x) + ' %' : '—';
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const r1 = x => Math.round(x * 10) / 10;
+
+/* ---------- Secteurs ---------- */
+const SECTEURS = {
+  immo: {
+    demande: { s: "demande d'estimation", p: "demandes d'estimation" },
+    etape2:  { s: "RDV d'estimation", p: "RDV d'estimation" },
+    etape3:  { s: 'mandat signé', p: 'mandats signés', court: 'Mandats' },
+    etape4:  { s: 'vente (acte signé)', p: 'ventes (actes signés)', court: 'Ventes' },
+    unite:   { s: 'vente', p: 'ventes' },
+    ticketSub: '(honoraires encaissés par vente)',
+    kpiSignes: 'Mandats signés par mois',
+    coutSigne: 'Coût par mandat',
+    etape4Active: true
+  },
+  btp: {
+    demande: { s: 'demande de devis', p: 'demandes de devis' },
+    etape2:  { s: 'RDV / devis envoyé', p: 'RDV / devis envoyés' },
+    etape3:  { s: 'client signé', p: 'clients signés', court: 'Signés' },
+    etape4:  null,
+    unite:   { s: 'client', p: 'clients' },
+    ticketSub: '(CA encaissé par client signé)',
+    kpiSignes: 'Clients signés par mois',
+    coutSigne: 'Coût par client signé',
+    etape4Active: false
+  }
+};
+
+const DEFAUTS_COMMUNS = {
+  closing: 35, budgetJour: 20,
+  cplP: 50, cplC: 35, cplH: 25,
+  rdvP: 30, rdvC: 35, rdvH: 40,
+  e4P: 65, e4C: 70, e4H: 75,
+  setup: 1800, commission: 100, engagement: 6,
+  caActuel: null, prixBien: 300000, honoraires: 3.3
+};
+const DEFAUTS_SECTEUR = {
+  immo: { ticket: 10000, delai: 5 },
+  btp:  { ticket: 5000,  delai: 1 }
+};
+function defauts(secteur) {
+  return Object.assign({ secteur, prospect: '' }, DEFAUTS_COMMUNS, DEFAUTS_SECTEUR[secteur]);
+}
+
+/* ---------- Calcul (fonction pure) ---------- */
+const SCEN = { prudent: 'P', central: 'C', haut: 'H' };
+
+function simuler(params, scenario) {
+  const k = SCEN[scenario];
+  const p = params;
+  const cpl = p['cpl' + k];
+  const tauxDemandeRdv = p['rdv' + k] / 100;
+  const closingPct = scenario === 'central' ? p.closing
+    : clamp(p.closing + (scenario === 'prudent' ? -5 : 5), 1, 95);
+  const tauxClosing = closingPct / 100;
+  const tauxEtape4 = p.secteur === 'immo' ? p['e4' + k] / 100 : 1;
+  const delai = p.delai;
+  const ticket = p.ticket;
+
+  const budgetGoogleMois = p.budgetJour * 30;
+  const gestionPF = budgetGoogleMois * p.commission / 100;
+  const investMensuel = budgetGoogleMois + gestionPF;
+  const demandes = budgetGoogleMois / cpl;
+  const rdv = demandes * tauxDemandeRdv;
+  const signes = rdv * tauxClosing;
+  const ventes = signes * tauxEtape4;
+  const caMensuel = ventes * ticket;
+  const coutParSigne = investMensuel / signes;
+  const coutParVente = investMensuel / ventes;
+  const coutAnnee1 = p.setup + 12 * investMensuel;
+  const moisEncaisses = Math.max(0, 12 - delai);
+  const caAnnee1 = caMensuel * moisEncaisses;
+  const ventesPourRentabiliserAn1 = coutAnnee1 / ticket;
+  const roiAnnee1 = caAnnee1 / coutAnnee1;
+  const tresorerieAvant1erEncaissement = p.setup + delai * investMensuel;
+  // caAnnee1 est linéaire en tauxClosing : on résout caAnnee1 = coutAnnee1
+  const caParPointClosing = demandes * tauxDemandeRdv * tauxEtape4 * ticket * moisEncaisses;
+  const closingMinimumRentable = caParPointClosing > 0 ? coutAnnee1 / caParPointClosing * 100 : Infinity;
+
+  return {
+    scenario, cpl, tauxDemandeRdv, tauxClosing, closingPct, tauxEtape4,
+    budgetGoogleMois, gestionPF, investMensuel, demandes, rdv, signes, ventes,
+    caMensuel, coutParSigne, coutParVente, coutAnnee1, caAnnee1,
+    ventesPourRentabiliserAn1, roiAnnee1, tresorerieAvant1erEncaissement,
+    closingMinimumRentable
+  };
+}
+
+/* ---------- Tests ---------- */
+function runTests() {
+  const p = Object.assign(defauts('immo'), { ticket: 10000, closing: 35, budgetJour: 20, setup: 1800, commission: 100 });
+  const r = simuler(p, 'central');
+  const checks = [
+    ['budget Google / mois', r.budgetGoogleMois, 600, 0.001],
+    ['investissement / mois', r.investMensuel, 1200, 0.001],
+    ['demandes (17,1)', r1(r.demandes), 17.1, 0.001],
+    ['demandes arrondies', Math.round(r.demandes), 17, 0],
+    ['RDV', Math.round(r.rdv), 6, 0],
+    ['mandats', r1(r.signes), 2.1, 0.001],
+    ['ventes (1,47)', Math.round(r.ventes * 100) / 100, 1.47, 0.001],
+    ['ventes arrondies', r1(r.ventes), 1.5, 0.001],
+    ['CA mensuel', Math.round(r.caMensuel / 100) * 100, 14700, 0],
+    ['coût par mandat', Math.round(r.coutParSigne), 571, 0],
+    ['coût 1re année', r.coutAnnee1, 16200, 0.001],
+    ['ventes pour rentabiliser', r1(r.ventesPourRentabiliserAn1), 1.6, 0.001],
+    ['trésorerie avant 1er encaissement', r.tresorerieAvant1erEncaissement, 7800, 0.001],
+    ['closing minimum → CA an 1 = coût an 1',
+      simuler(Object.assign({}, p, { closing: r.closingMinimumRentable }), 'central').caAnnee1, r.coutAnnee1, 0.01]
+  ];
+  let ok = 0;
+  console.group('runTests — simulateur Payment Flow');
+  checks.forEach(([nom, obtenu, attendu, tol]) => {
+    if (Math.abs(obtenu - attendu) <= tol) { ok++; console.log('OK  ' + nom + ' = ' + obtenu); }
+    else console.error('ÉCART  ' + nom + ' : obtenu ' + obtenu + ', attendu ' + attendu + ' (écart ' + (obtenu - attendu) + ')');
+  });
+  console.log(ok === checks.length ? 'OK — ' + ok + '/' + checks.length + ' tests passés' : 'ÉCHEC — ' + ok + '/' + checks.length);
+  console.groupEnd();
+  return ok === checks.length;
+}
+
+/* ---------- État ---------- */
+let state;
+const URL_KEYS = ['secteur', 'prospect', 'ticket', 'closing', 'budgetJour', 'prixBien', 'honoraires',
+  'cplP', 'cplC', 'cplH', 'rdvP', 'rdvC', 'rdvH', 'e4P', 'e4C', 'e4H',
+  'setup', 'commission', 'engagement', 'delai', 'caActuel'];
+
+function parseNum(s) {
+  if (s === null || s === undefined) return NaN;
+  const v = parseFloat(String(s).replace(/[\s  €%]/g, '').replace(',', '.'));
+  return v;
+}
+function toField(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (typeof v !== 'number') return String(v);
+  return String(Math.round(v * 100) / 100).replace('.', ',');
+}
+
+function loadFromUrl() {
+  let q;
+  try { q = new URLSearchParams(location.search); } catch (e) { q = new URLSearchParams(); }
+  const secteur = q.get('secteur') === 'btp' ? 'btp' : 'immo';
+  const s = defauts(secteur);
+  URL_KEYS.forEach(k => {
+    if (k === 'secteur' || !q.has(k)) return;
+    if (k === 'prospect') { s.prospect = q.get(k); return; }
+    const v = parseNum(q.get(k));
+    if (isFinite(v)) s[k] = v;
+  });
+  return s;
+}
+
+function writeUrl() {
+  const q = new URLSearchParams();
+  const d = defauts(state.secteur);
+  URL_KEYS.forEach(k => {
+    const v = state[k];
+    if (k === 'secteur') { q.set(k, v); return; }
+    if (v === null || v === '' || v === undefined) return;
+    if (k !== 'prospect' && v === d[k]) return;
+    q.set(k, String(v));
+  });
+  try { history.replaceState(null, '', location.pathname + '?' + q.toString()); } catch (e) { /* file:// restreint */ }
+}
+
+/* Valeurs utilisées pour le calcul : garde-fous contre les champs vides / nuls */
+function paramsCalcul() {
+  const p = Object.assign({}, state);
+  const d = defauts(state.secteur);
+  ['ticket', 'cplP', 'cplC', 'cplH'].forEach(k => { if (!(p[k] > 0)) p[k] = d[k]; });
+  ['closing', 'budgetJour', 'rdvP', 'rdvC', 'rdvH', 'e4P', 'e4C', 'e4H', 'setup', 'commission', 'delai', 'engagement']
+    .forEach(k => { if (!isFinite(p[k]) || p[k] < 0) p[k] = d[k]; });
+  p.closing = clamp(p.closing, 0, 100);
+  return p;
+}
+
+/* ---------- DOM ---------- */
+const $ = id => document.getElementById(id);
+const inputs = Array.from(document.querySelectorAll('input[data-key]'));
+const sliders = Array.from(document.querySelectorAll('input[data-slider]'));
+
+function syncInputs(except) {
+  inputs.forEach(el => {
+    if (el === except) return;
+    const v = state[el.dataset.key];
+    el.value = el.dataset.type === 'text' ? (v || '') : toField(v);
+  });
+  sliders.forEach(el => { if (el !== except) el.value = state[el.dataset.slider]; });
+  document.querySelectorAll('[data-secteur]').forEach(b => b.classList.toggle('active', b.dataset.secteur === state.secteur));
+}
+
+function majTicketDepuisBien() {
+  if (state.prixBien > 0 && state.honoraires >= 0) {
+    state.ticket = Math.round(state.prixBien * state.honoraires / 100);
+    $('f-ticket').value = toField(state.ticket);
+  }
+}
+
+inputs.forEach(el => {
+  el.addEventListener('input', () => {
+    const k = el.dataset.key;
+    if (el.dataset.type === 'text') state[k] = el.value;
+    else {
+      const v = parseNum(el.value);
+      state[k] = isFinite(v) ? v : (el.dataset.optional ? null : NaN);
+    }
+    if (k === 'prixBien' || k === 'honoraires') majTicketDepuisBien();
+    const sl = document.querySelector('input[data-slider="' + k + '"]');
+    if (sl && isFinite(state[k])) sl.value = state[k];
+    render();
+  });
+  el.addEventListener('blur', () => {
+    if (el.dataset.type === 'text') return;
+    const k = el.dataset.key;
+    if (!isFinite(state[k]) && !el.dataset.optional) { state[k] = defauts(state.secteur)[k]; el.value = toField(state[k]); render(); }
+  });
+});
+sliders.forEach(el => {
+  el.addEventListener('input', () => {
+    const k = el.dataset.slider;
+    state[k] = parseFloat(el.value);
+    $('f-' + k).value = toField(state[k]);
+    render();
+  });
+});
+document.querySelectorAll('[data-secteur]').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.secteur === state.secteur) return;
+  state.secteur = b.dataset.secteur;
+  Object.assign(state, DEFAUTS_SECTEUR[state.secteur]);
+  syncInputs();
+  render();
+}));
+$('btn-reset').addEventListener('click', () => {
+  const prospect = state.prospect;
+  state = defauts(state.secteur);
+  state.prospect = prospect;
+  syncInputs();
+  render();
+  toast('Valeurs par défaut du secteur rétablies');
+});
+$('btn-bien').addEventListener('click', () => {
+  const box = $('bien-box');
+  box.hidden = !box.hidden;
+  if (!box.hidden) { majTicketDepuisBien(); render(); }
+});
+
+/* ---------- Rendu ---------- */
+function pl(n, forms) { return Math.round(n * 10) / 10 >= 2 ? forms.p : forms.s; }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function nomProspect() { return (state.prospect || '').trim(); }
+
+function render() {
+  const p = paramsCalcul();
+  const S = SECTEURS[p.secteur];
+  const c = simuler(p, 'central'), pr = simuler(p, 'prudent'), ht = simuler(p, 'haut');
+  const nom = nomProspect();
+
+  // Secteur
+  $('ticket-sub').textContent = S.ticketSub;
+  $('bien-zone').hidden = !S.etape4Active;
+  document.querySelectorAll('.e4row').forEach(el => el.hidden = !S.etape4Active);
+  $('o-budgetMois').textContent = eur(c.budgetGoogleMois);
+  $('o-closingP').textContent = pct(pr.closingPct);
+  $('o-closingC').textContent = pct(c.closingPct);
+  $('o-closingH').textContent = pct(ht.closingPct);
+
+  // Titre + bandeau
+  $('o-titre').textContent = nom ? 'Simulation pour ' + nom : 'Simulation';
+  $('o-bandeau').innerHTML =
+    'Pour <strong>' + eur(c.investMensuel) + '</strong> par mois (' + eur(c.budgetGoogleMois) + ' chez Google), ' +
+    esc(nom || 'votre entreprise') + ' peut attendre ' +
+    '<span class="hl">~' + fmtInt(c.demandes) + ' ' + pl(Math.round(c.demandes), S.demande) + '</span>, ' +
+    '<span class="hl">~' + fmt1(c.signes) + ' ' + pl(c.signes, S.etape3) + '</span> et ' +
+    '<span class="hl">~' + eur100(c.caMensuel) + ' de CA</span> par mois.';
+
+  // KPIs
+  $('k-demandes').textContent = fmtInt(c.demandes);
+  $('k-demandes-sub').textContent = 'prudent ' + fmtInt(pr.demandes) + ' · haut ' + fmtInt(ht.demandes);
+  $('k-signes-lbl').textContent = S.kpiSignes;
+  $('k-signes').textContent = fmt1(c.signes);
+  $('k-signes-sub').textContent = 'prudent ' + fmt1(pr.signes) + ' · haut ' + fmt1(ht.signes);
+  $('k-ca').textContent = eur100(c.caMensuel);
+  $('k-ca-sub').textContent = S.etape4Active ? 'sur ' + fmt1(c.ventes) + ' ' + pl(c.ventes, S.unite) + ' / mois' : 'prudent ' + eur100(pr.caMensuel) + ' · haut ' + eur100(ht.caMensuel);
+  $('k-cout-lbl').textContent = S.coutSigne;
+  $('k-cout').textContent = eur(c.coutParSigne);
+  $('k-cout-sub').textContent = 'pour ' + eur(c.investMensuel) + ' investis / mois';
+
+  // Seuil
+  const v = c.ventesPourRentabiliserAn1;
+  $('o-seuil').innerHTML =
+    '<span class="bignum">' + fmt1(v) + '</span> ' + pl(v, S.unite) + (r1(v) >= 2 ? ' suffisent' : ' suffit') +
+    ' à rembourser toute la première année (<strong>' + eur(c.coutAnnee1) + '</strong>, setup compris).';
+  const ratio = v > 0 ? Math.round(c.demandes * 12 / v) : Infinity;
+  $('o-seuil-ratio').innerHTML = isFinite(ratio) && ratio >= 1
+    ? "Il suffit qu'<strong>1 " + S.demande.s + ' sur ' + fmtInt(ratio) + '</strong> se transforme en ' + S.unite.s + '.'
+    : '';
+  $('o-seuil-closing').innerHTML = 'Taux de closing minimum pour être rentable : <strong>' +
+    (isFinite(c.closingMinimumRentable) ? (c.closingMinimumRentable > 100 ? '> 100 %' : pct(r1(c.closingMinimumRentable))) : 'non atteignable') + '</strong>';
+
+  // Entonnoir
+  const arrow = rate => '<div class="f-arrow"><span class="rate">' + pct(Math.round(rate * 1000) / 10) + '</span>' +
+    '<svg viewBox="0 0 52 18" aria-hidden="true"><path d="M2 9h44M38 2l8 7-8 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+  const step = (n, l, last) => '<div class="f-step' + (last ? ' last' : '') + '"><div class="n num">' + n + '</div><div class="l">' + l + '</div></div>';
+  let f = step(fmtInt(c.demandes), cap(pl(Math.round(c.demandes), S.demande)))
+    + arrow(c.tauxDemandeRdv) + step(fmtInt(c.rdv), S.etape2.p)
+    + arrow(c.tauxClosing) + step(fmt1(c.signes), cap(pl(c.signes, S.etape3)), !S.etape4Active);
+  if (S.etape4Active) f += arrow(c.tauxEtape4) + step(fmt1(c.ventes), cap(pl(c.ventes, S.etape4)), true);
+  $('o-funnel').innerHTML = f;
+
+  // Tableau scénarios
+  let h = '<thead><tr><th>Scénario</th><th>Demandes</th><th>RDV</th><th>' + S.etape3.court + '</th>' +
+    (S.etape4Active ? '<th>Ventes</th>' : '') + '<th>CA mensuel</th><th>' + (S.etape4Active ? 'Coût par mandat' : 'Coût par signé') + '</th><th>ROI an 1</th></tr></thead><tbody>';
+  [['Prudent', pr], ['Central', c], ['Haut', ht]].forEach(([n, r]) => {
+    h += '<tr' + (r === c ? ' class="central"' : '') + '><td>' + n + '</td><td>' + fmtInt(r.demandes) + '</td><td>' + fmtInt(r.rdv) +
+      '</td><td>' + fmt1(r.signes) + '</td>' + (S.etape4Active ? '<td>' + fmt1(r.ventes) + '</td>' : '') +
+      '<td>' + eur100(r.caMensuel) + '</td><td>' + eur(r.coutParSigne) + '</td><td>' + (isFinite(r.roiAnnee1) ? '× ' + fmtMax1(r1(r.roiAnnee1)) : '—') + '</td></tr>';
+  });
+  $('t-scen').innerHTML = h + '</tbody>';
+
+  // Tableau budgets
+  const budgets = [10, 15, 20, 30, 50];
+  if (!budgets.includes(p.budgetJour)) budgets.push(p.budgetJour);
+  budgets.sort((a, b) => a - b);
+  h = '<thead><tr><th>Budget Google</th><th>Demandes</th><th>' + S.etape3.court + ' (prudent – haut)</th><th>CA mensuel</th><th>Investissement total / mois</th><th>Coût 1re année</th><th>' +
+    (S.etape4Active ? 'Ventes' : 'Clients') + ' pour rentabiliser l\'an 1</th></tr></thead><tbody>';
+  budgets.forEach(b => {
+    const q = Object.assign({}, p, { budgetJour: b });
+    const bc = simuler(q, 'central'), bp = simuler(q, 'prudent'), bh = simuler(q, 'haut');
+    h += '<tr' + (b === p.budgetJour ? ' class="current"' : '') + '><td>' + fmtMax1(b) + ' €/jour <span class="muted">· ' + eur(bc.budgetGoogleMois) + '/mois</span></td>' +
+      '<td>' + fmtInt(bc.demandes) + '</td><td>' + fmt1(bp.signes) + ' – ' + fmt1(bh.signes) + '</td><td>' + eur100(bc.caMensuel) +
+      '</td><td>' + eur(bc.investMensuel) + '</td><td>' + eur(bc.coutAnnee1) + '</td><td>' + fmt1(bc.ventesPourRentabiliserAn1) + '</td></tr>';
+  });
+  $('t-budget').innerHTML = h + '</tbody>';
+
+  // Alertes
+  const al = [];
+  if (p.delai > 1) al.push('Trésorerie : environ <strong>' + eur(c.tresorerieAvant1erEncaissement) + '</strong> investis avant le premier encaissement (' + fmtMax1(p.delai) + ' mois de délai, setup compris).');
+  if (c.demandes < 5) al.push('Moins de 5 demandes par mois : budget trop faible pour optimiser la campagne.');
+  if (state.caActuel !== null && isFinite(state.caActuel) && state.caActuel < 10000)
+    al.push('Éligibilité : l\'offre s\'adresse aux entreprises réalisant au moins 10\u202f000\u00a0€ de CA par mois (actuel : ' + eur(state.caActuel) + ').');
+  $('o-alerts').innerHTML = al.map(a => '<div class="alert"><span class="ic">!</span><div>' + a + '</div></div>').join('');
+
+  writeUrl();
+}
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ---------- Récap ---------- */
+function recapTexte() {
+  const p = paramsCalcul();
+  const S = SECTEURS[p.secteur];
+  const c = simuler(p, 'central'), pr = simuler(p, 'prudent'), ht = simuler(p, 'haut');
+  const v = c.ventesPourRentabiliserAn1;
+  return [
+    'Simulation Google Ads — ' + (nomProspect() || 'prospect') + ' (Payment Flow)',
+    'Budget : ' + eur(c.budgetGoogleMois) + '/mois chez Google (' + fmtMax1(p.budgetJour) + ' €/jour), soit ' + eur(c.investMensuel) + '/mois au total, engagement ' + fmtMax1(p.engagement) + ' mois',
+    cap(S.demande.p) + ' estimées : ~' + fmtInt(c.demandes) + ' par mois',
+    cap(S.etape3.p) + ' : ~' + fmt1(c.signes) + ' par mois (fourchette ' + fmt1(pr.signes) + ' – ' + fmt1(ht.signes) + ')',
+    'CA généré : ~' + eur100(c.caMensuel) + ' par mois',
+    'Coût 1re année (setup compris) : ' + eur(c.coutAnnee1),
+    'Seuil de rentabilité : ' + fmt1(v) + ' ' + pl(v, S.unite) + ' ' + (r1(v) >= 2 ? 'suffisent' : 'suffit') + ' à rembourser la première année',
+    'Estimations indicatives basées sur les hypothèses partagées ensemble.'
+  ].join('\n');
+}
+$('btn-copy').addEventListener('click', async () => {
+  const txt = recapTexte();
+  let ok = false;
+  try { await navigator.clipboard.writeText(txt); ok = true; } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (e2) { ok = false; }
+    ta.remove();
+  }
+  toast(ok ? 'Récap copié dans le presse-papier' : 'Copie impossible');
+});
+
+let toastTimer;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* ---------- Init ---------- */
+state = loadFromUrl();
+syncInputs();
+render();
+runTests();
+</script>
+</body>
+</html>
