@@ -45,6 +45,8 @@
   .recap dl div { display: flex; justify-content: space-between; gap: 16px; font-size: 15px; }
   .recap dt { color: var(--sur-nuit); }
   .recap dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .pitch .btn-blanc { display: none; }
+  body[data-mode=resultats] .pitch .btn-blanc { display: inline-flex; }
   .garantie { margin-top: 22px; background: var(--nuit-2); border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 1.4; display: flex; gap: 10px; }
   .garantie svg { width: 20px; height: 20px; color: #9FB6FF; margin-top: 1px; }
 
@@ -104,7 +106,9 @@
   .verrou { position: relative; margin-bottom: 20px; }
   .verrou.ferme { overflow: hidden; border-radius: 20px; }
   .blurred { filter: blur(10px); user-select: none; pointer-events: none; }
-  .pastille-verrou { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--nuit); color: #fff; border-radius: 999px; padding: 11px 20px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 10px 28px rgba(15, 28, 63, .28); }
+  .voile { position: absolute; inset: 0; width: 100%; background: transparent; border: 0; padding: 0; cursor: pointer; font: inherit; display: flex; align-items: center; justify-content: center; }
+  .voile:hover .pastille-verrou { background: var(--accent); transform: scale(1.04); }
+  .pastille-verrou { transition: background .15s, transform .15s; background: var(--nuit); color: #fff; border-radius: 999px; padding: 11px 20px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 10px 28px rgba(15, 28, 63, .28); }
   .pastille-verrou svg { width: 18px; height: 18px; }
   .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
   .kpi { background: var(--carte); border: 1px solid var(--bordure); border-radius: 16px; padding: 20px; min-width: 0; box-shadow: var(--ombre); }
@@ -135,6 +139,16 @@
   .legal svg { width: 18px; height: 18px; color: var(--texte2); margin-top: 1px; }
 
   /* Appel à l'action */
+  .btn-blanc { background: #fff; color: var(--nuit); border-color: #fff; width: 100%; margin-top: 22px; }
+  .btn-blanc:hover { background: var(--accent-clair); transform: translateY(-1px); }
+  .btn-large { width: 100%; margin-bottom: 16px; }
+  .form-card { scroll-margin-top: 16px; }
+  .form-card.signal { animation: signal 1s ease; }
+  @keyframes signal { 0%, 100% { box-shadow: var(--ombre); } 35% { box-shadow: 0 0 0 6px rgba(47, 91, 234, .28); } }
+  .barre { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; align-items: center; justify-content: center; gap: 16px; padding: 12px 16px; background: var(--carte); border-top: 1px solid var(--bordure); box-shadow: 0 -8px 24px rgba(15, 28, 63, .1); font-weight: 700; }
+  .barre .btn-primary { flex: none; }
+  body[data-barre] { padding-bottom: 76px; }
+  .info-envoi { font-size: 14px; color: var(--texte2); margin: 12px 0 0; }
   .cta { background: var(--nuit); color: #fff; border-radius: 20px; padding: 30px 32px; margin-bottom: 20px; }
   .cta p { color: var(--sur-nuit); margin: 0 0 20px; }
   .cta .btn { width: 100%; }
@@ -165,6 +179,8 @@
     .top-info span { display: none; }
     .top-info::after { content: "Gratuit · 1 min"; }
     .choices, .fields { grid-template-columns: minmax(0, 1fr); }
+    .barre { justify-content: space-between; font-size: 15px; gap: 10px; line-height: 1.25; }
+    .barre .btn { padding: 12px 16px; }
     .kpi .val { font-size: 28px; }
     .seuil .big { font-size: 22px; }
     h2 { font-size: 23px; }
@@ -203,6 +219,7 @@
       <div class="recap-titre">Vos réponses</div>
       <dl id="recap"></dl>
     </div>
+    <button type="button" class="btn btn-blanc" data-vers-form>Débloquer mon diagnostic <svg class="ic" style="width:20px;height:20px"><use href="#i-arrow"/></svg></button>
     <div class="garantie"><svg class="ic"><use href="#i-shield"/></svg><div>Payment Flow garantit des demandes qualifiées, pas un nombre de ventes.</div></div>
   </aside>
 
@@ -222,13 +239,14 @@
           <div class="jauge-rail"><i id="jauge-point"></i></div>
           <div class="jauge-txt"><span id="jauge-min"></span><span id="jauge-max"></span></div>
         </div>
+        <button type="button" class="btn btn-blanc" data-vers-form>Voir ce que ce budget peut rapporter <svg class="ic" style="width:20px;height:20px"><use href="#i-arrow"/></svg></button>
       </div>
       <p class="note"><svg class="ic"><use href="#i-info"/></svg><span>Ce calcul couvre uniquement votre budget Google. L'accompagnement n'est pas inclus : nous vous le présentons lors de l'appel.</span></p>
 
       <h2 id="res-titre" tabindex="-1" style="margin-bottom:16px"></h2>
       <div class="verrou" id="verrou">
         <div id="zone-resultat"></div>
-        <div class="pastille-verrou" id="pastille"><svg class="ic"><use href="#i-lock"/></svg>Votre résultat est prêt</div>
+        <button type="button" class="voile" id="pastille" data-vers-form aria-label="Débloquer mon résultat"><span class="pastille-verrou"><svg class="ic"><use href="#i-lock"/></svg>Débloquer mon résultat</span></button>
       </div>
 
       <form class="card form-card" id="form-contact" novalidate>
@@ -257,6 +275,8 @@
         <a class="btn btn-primary" id="cta-lien" target="_blank" rel="noopener">Réserver mon audit offert <svg class="ic" style="width:20px;height:20px"><use href="#i-arrow"/></svg></a>
       </div>
 
+      <button type="button" class="btn btn-primary btn-large" id="btn-bas" data-vers-form>Débloquer mon diagnostic complet</button>
+
       <details class="methode">
         <summary>Comment ce calcul est fait</summary>
         <ul id="methode"></ul>
@@ -268,6 +288,8 @@
     </section>
   </main>
 </div>
+
+<div class="barre" id="barre" hidden><span>Votre diagnostic complet est prêt</span><button type="button" class="btn btn-primary" data-vers-form>Le débloquer</button></div>
 
 <footer class="bas"><a href="confidentialite.html">Confidentialité et mentions légales</a></footer>
 
@@ -328,6 +350,7 @@ const ICONES = {
   beaute: '<path d="M12 3l1.900 5.100L19 10l-5.100 1.900L12 17l-1.900-5.100L5 10l5.100-1.900zM19 16v4M17 18h4"/>',
   autre: '<circle cx="6" cy="12" r="1.500"/><circle cx="12" cy="12" r="1.500"/><circle cx="18" cy="12" r="1.500"/>'
 };
+const ORDRE_SECTEURS = ['b2b', 'btp', 'formation', 'liberal', 'immo', 'energie', 'domicile', 'auto', 'beaute', 'autre'];
 const TAUX_RDV = [0.30, 0.35, 0.40];
 const pluriel = (n, f) => Math.round(n * 10) / 10 >= 2 ? f.p : f.s;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
@@ -367,6 +390,8 @@ function runTests() {
 /* ---------- Questions ---------- */
 const reponses = { secteur: null, demandes: 20, ticket: null, closing: 35 };
 let etape = 0, debloque = false;
+// Relie le diagnostic et les coordonnées sur la même ligne du Google Sheet
+const ID_DIAGNOSTIC = window.crypto && crypto.randomUUID ? crypto.randomUUID() : 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
 const NB_ETAPES = 4;
 
 function parseNum(s) { return parseFloat(String(s).replace(/[\s  €%]/g, '').replace(',', '.')); }
@@ -400,7 +425,8 @@ function champCurseur(titre, aide, cle, min, max, unite, reperes) {
 function navigation() {
   return '<div class="error" id="err" role="alert" hidden></div><div class="nav">' +
     '<button class="btn" type="button" id="prec">Retour</button>' +
-    '<button class="btn btn-primary" type="button" id="suiv">' + (etape === NB_ETAPES - 1 ? 'Voir mon estimation' : 'Continuer') + '</button></div>';
+    '<button class="btn btn-primary" type="button" id="suiv">' + (etape === NB_ETAPES - 1 ? 'Voir mon estimation' : 'Continuer') + '</button></div>' +
+    (etape === NB_ETAPES - 1 ? '<p class="info-envoi">En continuant, vos réponses sont enregistrées, sans vos coordonnées. <a href="confidentialite.html" target="_blank" rel="noopener">En savoir plus</a></p>' : '');
 }
 function erreur(msg) { const e = $('err'); e.textContent = msg; e.hidden = false; }
 
@@ -416,7 +442,7 @@ function afficherEtape() {
   majRecap();
   if (etape === 0) {
     corps.innerHTML = '<h2 tabindex="-1">Quel est votre secteur ?</h2><p class="sous">Nous adaptons le calcul et le vocabulaire à votre activité.</p><div class="choices">' +
-      Object.keys(SECTEURS).map(k => '<button type="button" class="choice' + (reponses.secteur === k ? ' active' : '') + '" data-s="' + k + '"><span class="pastille"><svg class="ic" viewBox="0 0 24 24">' + ICONES[k] + '</svg></span>' + SECTEURS[k].nom + '</button>').join('') + '</div>';
+      ORDRE_SECTEURS.map(k => '<button type="button" class="choice' + (reponses.secteur === k ? ' active' : '') + '" data-s="' + k + '"><span class="pastille"><svg class="ic" viewBox="0 0 24 24">' + ICONES[k] + '</svg></span>' + SECTEURS[k].nom + '</button>').join('') + '</div>';
     document.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => {
       if (reponses.secteur !== b.dataset.s) reponses.ticket = SECTEURS[b.dataset.s].ticket;
       reponses.secteur = b.dataset.s; etape = 1; afficherEtape();
@@ -441,7 +467,9 @@ function valider() {
   if (etape === 1) { if (!(v >= 1 && v <= 500)) return erreur('Indiquez un nombre entre 1 et 500.'); reponses.demandes = Math.round(v); }
   if (etape === 2) { if (!(v > 0)) return erreur('Indiquez un montant supérieur à 0 €.'); reponses.ticket = v; }
   if (etape === 3) { if (!(v >= 1 && v <= 95)) return erreur('Indiquez un taux entre 1 et 95 %.'); reponses.closing = v; }
-  if (etape < NB_ETAPES - 1) { etape++; afficherEtape(); } else afficherResultats();
+  if (etape < NB_ETAPES - 1) { etape++; afficherEtape(); return; }
+  afficherResultats();
+  envoyerLead(construireLead());
 }
 
 /* ---------- Résultats ---------- */
@@ -460,6 +488,8 @@ function afficherResultats() {
   $('res-titre').textContent = debloque ? $('prenom').value.trim() + ', voici ce que ce budget peut vous rapporter' : 'Ce que ce budget peut vous rapporter';
   $('debloque-clients').textContent = 'Le nombre de ' + S.signe.p + ' à attendre chaque mois';
   $('form-contact').hidden = debloque;
+  document.querySelectorAll('[data-vers-form]').forEach(b => { b.hidden = debloque; });
+  majBarre();
   $('cta').hidden = !debloque || !CONFIG.LIEN_AUDIT;
   if (CONFIG.LIEN_AUDIT) $('cta-lien').href = CONFIG.LIEN_AUDIT;
   // Avant déblocage, le flou porte sur des valeurs fictives : le vrai résultat n'est pas dans la page
@@ -501,12 +531,14 @@ const apercuFlou = () => '<div class="kpis">' + kpi('Clients par mois', '0,0 à 
   '<div class="seuil" style="margin-bottom:0"><div class="big">1 client paie environ <b>0,0 mois</b> de budget Google.</div></div>';
 
 /* ---------- Envoi du lead ---------- */
-function construireLead() {
+function construireLead(avecContact) {
   const S = SECTEURS[reponses.secteur], d = diagnostiquer(reponses), [p, c, h] = d.scenarios;
   const q = new URLSearchParams(location.search);
   const arr1 = x => Math.round(x * 10 + 1e-9) / 10;
   return {
-    prenom: $('prenom').value.trim(), nom: $('nom').value.trim(), email: $('email').value.trim(), telephone: $('telephone').value.trim(), website: $('website').value,
+    id: ID_DIAGNOSTIC, website: $('website').value,
+    // Une saisie non validée n'est jamais envoyée
+    ...(debloque || avecContact ? { prenom: $('prenom').value.trim(), nom: $('nom').value.trim(), email: $('email').value.trim(), telephone: $('telephone').value.trim() } : {}),
     secteur: S.nom, demandes: reponses.demandes, ticket: reponses.ticket, closing: reponses.closing,
     budgetMin: Math.round(d.budgetMin), budgetCentral: Math.round(d.budgetCentral), budgetMax: Math.round(d.budgetMax), rdv: arr1(c.rdv),
     signesMin: arr1(p.signes), signesCentral: arr1(c.signes), signesMax: arr1(h.signes),
@@ -537,13 +569,30 @@ $('form-contact').addEventListener('submit', async e => {
   const premier = mauvais.find(m => m[1]);
   if (premier) { err.textContent = 'Indiquez votre prénom, votre nom et un email valide.'; err.hidden = false; $(premier[0]).focus(); return; }
   const b = $('btn-reveler'); b.disabled = true; b.textContent = 'Un instant…';
-  await envoyerLead(construireLead());
+  await envoyerLead(construireLead(true));
   // Le prospect obtient son résultat même si l'envoi échoue
   debloque = true;
   b.disabled = false; b.textContent = 'Afficher mon diagnostic';
   afficherResultats();
 });
 $('btn-modifier').addEventListener('click', () => { etape = 1; afficherEtape(); });
+
+/* ---------- Tout ce qui mène au formulaire ---------- */
+document.querySelectorAll('[data-vers-form]').forEach(b => b.addEventListener('click', () => {
+  const f = $('form-contact');
+  const doux = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  f.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
+  $('prenom').focus({ preventScroll: true });
+  f.classList.remove('signal'); void f.offsetWidth; f.classList.add('signal');
+}));
+// La barre fixe disparaît quand le formulaire est à l'écran
+let formVisible = false;
+function majBarre() {
+  const afficher = document.body.dataset.mode === 'resultats' && !debloque && !formVisible;
+  $('barre').hidden = !afficher;
+  document.body.toggleAttribute('data-barre', afficher);
+}
+new IntersectionObserver(e => { formVisible = e[e.length - 1].isIntersecting; majBarre(); }, { threshold: 0.15 }).observe($('form-contact'));
 $('legal').innerHTML = 'Vos coordonnées servent uniquement à Payment Flow pour vous recontacter au sujet de ce diagnostic. Vous pouvez demander leur accès ou leur suppression à ' +
   CONFIG.EMAIL_CONTACT + '. <a href="confidentialite.html" target="_blank" rel="noopener">Politique de confidentialité</a>';
 
