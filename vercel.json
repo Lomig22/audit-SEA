@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/simulateur.html" }
+    { "source": "/", "destination": "/diagnostic.html" }
   ]
 }

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic Google Ads — Payment Flow</title>
+<meta name="description" content="Combien coûtent vos demandes sur Google Ads, et combien de clients peuvent-elles vous rapporter ? Diagnostic gratuit en 1 minute.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --nuit: #0F1C3F; --nuit-2: #1B2B57; --accent: #2F5BEA; --accent-fonce: #2549C4; --accent-clair: #EAF0FE;
+    --fond: #F5F7FB; --carte: #FDFDFE; --bordure: #DCE3F0; --texte2: #4A5568; --sur-nuit: #C9D4F5;
+    --orange: #E8891C; --orange-texte: #B4530A; --orange-clair: #FFF1DF;
+    --ombre: 0 1px 2px rgba(15, 28, 63, .05), 0 12px 32px rgba(15, 28, 63, .07);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--fond); color: var(--nuit); font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 17px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  [hidden] { display: none !important; }
+  svg.ic { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  input:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  h2:focus { outline: none; }
+
+  /* En-tête */
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; max-width: 1160px; margin: 0 auto; padding: 20px 24px; }
+  .marque { font-size: 21px; font-weight: 800; letter-spacing: -0.02em; }
+  .marque span { color: var(--accent); }
+  .top-info { font-size: 15px; font-weight: 600; color: var(--texte2); display: flex; align-items: center; gap: 8px; }
+  .top-info svg { width: 18px; height: 18px; color: var(--accent); }
+
+  /* Mise en page */
+  .shell { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 28px; max-width: 1160px; margin: 0 auto; padding: 4px 24px 48px; align-items: start; }
+  .pitch { position: sticky; top: 20px; background: var(--nuit); color: #fff; border-radius: 20px; padding: 32px 28px; }
+  .eyebrow { font-size: 14px; font-weight: 700; color: var(--sur-nuit); margin-bottom: 12px; }
+  h1 { font-size: 34px; line-height: 1.14; letter-spacing: -0.025em; margin: 0 0 14px; font-weight: 800; }
+  .pitch p { color: var(--sur-nuit); margin: 0; }
+  .points { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 12px; }
+  .points li { display: flex; gap: 10px; font-weight: 500; font-size: 16px; line-height: 1.35; }
+  .points svg { width: 20px; height: 20px; color: #9FB6FF; margin-top: 1px; }
+  .recap { margin-top: 26px; padding-top: 20px; border-top: 1px solid rgba(201, 212, 245, .25); }
+  .recap-titre { font-size: 14px; font-weight: 700; color: var(--sur-nuit); margin-bottom: 10px; }
+  .recap dl { margin: 0; display: grid; gap: 8px; }
+  .recap dl div { display: flex; justify-content: space-between; gap: 16px; font-size: 15px; }
+  .recap dt { color: var(--sur-nuit); }
+  .recap dd { margin: 0; font-weight: 700; text-align: right; font-variant-numeric: tabular-nums; }
+  .garantie { margin-top: 22px; background: var(--nuit-2); border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 1.4; display: flex; gap: 10px; }
+  .garantie svg { width: 20px; height: 20px; color: #9FB6FF; margin-top: 1px; }
+
+  /* Carte de travail */
+  .card { background: var(--carte); border: 1px solid var(--bordure); border-radius: 20px; padding: 32px; box-shadow: var(--ombre); margin-bottom: 20px; }
+  .card:last-child { margin-bottom: 0; }
+  .progress-head { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; color: var(--texte2); margin-bottom: 8px; }
+  .progress { height: 6px; background: var(--bordure); border-radius: 6px; overflow: hidden; margin-bottom: 26px; }
+  .progress div { height: 100%; background: var(--accent); border-radius: 6px; transition: width .3s ease; }
+  h2 { font-size: 26px; line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 8px; font-weight: 800; }
+  .sous { color: var(--texte2); margin: 0 0 22px; }
+  #step-body.entre { animation: entre .25s ease; }
+  @keyframes entre { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .choice { font: inherit; font-size: 16px; font-weight: 600; line-height: 1.25; text-align: left; display: flex; align-items: center; gap: 12px; padding: 14px; background: #fff; border: 1.5px solid var(--bordure); border-radius: 14px; color: var(--nuit); cursor: pointer; transition: border-color .15s, background .15s, transform .15s; }
+  .choice .pastille { width: 42px; height: 42px; border-radius: 11px; background: var(--accent-clair); color: var(--accent); display: grid; place-items: center; flex: none; }
+  .choice:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .choice.active { border-color: var(--accent); background: var(--accent-clair); }
+  .choice.active .pastille { background: var(--accent); color: #fff; }
+
+  label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 16px; }
+  input[type=text], input[type=email], input[type=tel] { font: inherit; color: var(--nuit); background: #fff; border: 1.5px solid var(--bordure); border-radius: 12px; padding: 12px 14px; width: 100%; transition: border-color .15s; }
+  input[type=text]:hover, input[type=email]:hover, input[type=tel]:hover { border-color: #B9C6DE; }
+  input[aria-invalid=true] { border-color: var(--orange-texte); background: var(--orange-clair); }
+  input[type=range] { width: 100%; height: 32px; accent-color: var(--accent); cursor: pointer; margin: 14px 0 0; }
+  .bigfield { position: relative; }
+  .bigfield input { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; padding: 12px 104px 12px 16px; font-variant-numeric: tabular-nums; }
+  .bigfield span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--texte2); font-weight: 600; pointer-events: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { font: inherit; font-size: 15px; font-weight: 600; padding: 7px 14px; border-radius: 999px; border: 1.5px solid var(--bordure); background: #fff; color: var(--nuit); cursor: pointer; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .aide { font-size: 15px; color: var(--texte2); margin-top: 14px; display: flex; gap: 8px; line-height: 1.4; }
+  .aide svg { width: 18px; height: 18px; color: var(--accent); margin-top: 1px; }
+  .error { color: var(--orange-texte); font-size: 15px; font-weight: 600; margin-top: 10px; }
+  .nav { display: flex; gap: 12px; margin-top: 26px; }
+  .btn { font: inherit; font-weight: 700; padding: 14px 22px; border-radius: 12px; border: 1.5px solid var(--bordure); background: #fff; color: var(--nuit); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s, transform .15s, box-shadow .15s; }
+  .btn:hover { border-color: #B9C6DE; }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; flex: 1; box-shadow: 0 6px 16px rgba(47, 91, 234, .28); }
+  .btn-primary:hover { background: var(--accent-fonce); border-color: var(--accent-fonce); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: .7; cursor: wait; transform: none; }
+
+  /* Budget */
+  .hero { background: var(--nuit); color: #fff; border-radius: 20px; padding: 30px 32px; margin-bottom: 20px; }
+  .hero .lbl { color: var(--sur-nuit); font-weight: 600; }
+  .hero .val { font-size: 64px; font-weight: 800; line-height: 1.05; margin: 6px 0 2px; letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+  .hero .val small { font-size: 22px; font-weight: 600; letter-spacing: 0; color: var(--sur-nuit); }
+  .hero .sub { color: var(--sur-nuit); }
+  .jauge { margin-top: 22px; }
+  .jauge-rail { position: relative; height: 8px; border-radius: 8px; background: var(--nuit-2); }
+  .jauge-rail i { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: #fff; border: 4px solid var(--accent); }
+  .jauge-txt { display: flex; justify-content: space-between; margin-top: 10px; font-size: 15px; color: var(--sur-nuit); font-variant-numeric: tabular-nums; }
+  .note { font-size: 15px; color: var(--texte2); background: var(--accent-clair); border-radius: 12px; padding: 12px 14px; margin-bottom: 20px; display: flex; gap: 10px; line-height: 1.4; }
+  .note svg { width: 20px; height: 20px; color: var(--accent); margin-top: 1px; }
+
+  /* Résultat */
+  .verrou { position: relative; margin-bottom: 20px; }
+  .verrou.ferme { overflow: hidden; border-radius: 20px; }
+  .blurred { filter: blur(10px); user-select: none; pointer-events: none; }
+  .pastille-verrou { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--nuit); color: #fff; border-radius: 999px; padding: 11px 20px; font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 10px 28px rgba(15, 28, 63, .28); }
+  .pastille-verrou svg { width: 18px; height: 18px; }
+  .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+  .kpi { background: var(--carte); border: 1px solid var(--bordure); border-radius: 16px; padding: 20px; min-width: 0; box-shadow: var(--ombre); }
+  .kpi .lbl { font-size: 15px; color: var(--texte2); font-weight: 600; }
+  .kpi .val { font-size: 32px; font-weight: 800; line-height: 1.15; margin-top: 6px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .kpi .sub { font-size: 15px; color: var(--texte2); margin-top: 4px; }
+  .seuil { background: var(--orange-clair); border: 1.5px solid #F3C98F; border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; }
+  .seuil .big { font-size: 25px; font-weight: 700; line-height: 1.25; letter-spacing: -0.01em; }
+  .seuil .big b { color: var(--orange-texte); font-weight: 800; }
+  .seuil .sub { font-size: 15px; color: var(--texte2); margin-top: 6px; }
+  .funnel { display: grid; gap: 4px; }
+  .f-row .f-txt { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .f-row .f-txt b { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .f-bar { height: 10px; background: var(--accent-clair); border-radius: 5px; margin-top: 4px; overflow: hidden; }
+  .f-bar div { height: 100%; background: var(--accent); border-radius: 5px; min-width: 6px; }
+  .f-rate { font-size: 14px; font-weight: 600; color: var(--texte2); padding: 4px 0; }
+
+  /* Formulaire */
+  .form-card { border: 2px solid var(--accent); }
+  .debloque { list-style: none; margin: 0 0 22px; padding: 0; display: grid; gap: 8px; }
+  .debloque li { display: flex; gap: 10px; font-weight: 500; line-height: 1.35; }
+  .debloque svg { width: 20px; height: 20px; color: var(--accent); margin-top: 2px; }
+  .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .full { grid-column: 1 / -1; }
+  .opt { font-weight: 400; color: var(--texte2); }
+  .trap { position: absolute; left: -9999px; height: 0; overflow: hidden; }
+  .legal { font-size: 14px; color: var(--texte2); margin: 14px 0 0; display: flex; gap: 8px; line-height: 1.4; }
+  .legal svg { width: 18px; height: 18px; color: var(--texte2); margin-top: 1px; }
+
+  /* Appel à l'action */
+  .cta { background: var(--nuit); color: #fff; border-radius: 20px; padding: 30px 32px; margin-bottom: 20px; }
+  .cta p { color: var(--sur-nuit); margin: 0 0 20px; }
+  .cta .btn { width: 100%; }
+
+  details.methode { background: var(--carte); border: 1px solid var(--bordure); border-radius: 14px; padding: 16px 20px; margin-bottom: 16px; }
+  details.methode summary { cursor: pointer; font-weight: 700; }
+  details.methode ul { margin: 12px 0 0; padding-left: 20px; color: var(--texte2); font-size: 15px; }
+  .pied { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 20px; font-size: 14px; color: var(--texte2); }
+  .linkbtn { font: inherit; font-size: 15px; font-weight: 600; background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  @media (max-width: 940px) {
+    .shell { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 0 16px 32px; }
+    .top { padding: 14px 16px; }
+    .pitch { position: static; padding: 24px 20px; border-radius: 16px; }
+    h1 { font-size: 28px; }
+    .recap, .garantie { display: none; }
+    body:not([data-accueil]) .pitch { display: none; }
+    body[data-mode=resultats] .pitch { display: none; }
+    body[data-mode=resultats] .garantie-bas { display: flex; }
+    .card { padding: 22px 18px; border-radius: 16px; }
+    .hero, .cta { padding: 24px 20px; border-radius: 16px; }
+    .hero .val { font-size: 52px; }
+  }
+  .garantie-bas { display: none; }
+  @media (max-width: 560px) {
+    .top-info span { display: none; }
+    .top-info::after { content: "Gratuit · 1 min"; }
+    .choices, .fields { grid-template-columns: minmax(0, 1fr); }
+    .kpi .val { font-size: 28px; }
+    .seuil .big { font-size: 22px; }
+    h2 { font-size: 23px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.800-1.200-8-4.500-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+</defs></svg>
+
+<header class="top">
+  <div class="marque">Payment <span>Flow</span></div>
+  <div class="top-info"><svg class="ic"><use href="#i-clock"/></svg><span>Diagnostic gratuit · 1 minute</span></div>
+</header>
+
+<div class="shell">
+  <aside class="pitch">
+    <div class="eyebrow">Diagnostic Google Ads</div>
+    <h1>Combien vous coûteraient vos demandes sur Google ?</h1>
+    <p>Fixez votre objectif : vous voyez le budget nécessaire, puis ce qu'il peut vous rapporter.</p>
+    <ul class="points">
+      <li><svg class="ic"><use href="#i-check"/></svg>Calculé à partir de votre objectif et de vos chiffres</li>
+      <li><svg class="ic"><use href="#i-check"/></svg>Toutes nos hypothèses sont affichées</li>
+      <li><svg class="ic"><use href="#i-check"/></svg>Votre résultat s'affiche ici, tout de suite</li>
+    </ul>
+    <div class="recap">
+      <div class="recap-titre">Vos réponses</div>
+      <dl id="recap"></dl>
+    </div>
+    <div class="garantie"><svg class="ic"><use href="#i-shield"/></svg><div>Payment Flow garantit des demandes qualifiées, pas un nombre de ventes.</div></div>
+  </aside>
+
+  <main>
+    <section id="questions" class="card">
+      <div class="progress-head"><span id="step-label"></span><span id="step-reste"></span></div>
+      <div class="progress"><div id="bar"></div></div>
+      <div id="step-body"></div>
+    </section>
+
+    <section id="resultats" hidden>
+      <div class="hero">
+        <div class="lbl" id="res-budget-lbl"></div>
+        <div class="val"><span id="res-budget"></span> <small>/ mois</small></div>
+        <div class="sub" id="res-budget-sub"></div>
+        <div class="jauge">
+          <div class="jauge-rail"><i id="jauge-point"></i></div>
+          <div class="jauge-txt"><span id="jauge-min"></span><span id="jauge-max"></span></div>
+        </div>
+      </div>
+      <p class="note"><svg class="ic"><use href="#i-info"/></svg><span>Ce calcul couvre uniquement votre budget Google. L'accompagnement n'est pas inclus : nous vous le présentons lors de l'appel.</span></p>
+
+      <h2 id="res-titre" tabindex="-1" style="margin-bottom:16px"></h2>
+      <div class="verrou" id="verrou">
+        <div id="zone-resultat"></div>
+        <div class="pastille-verrou" id="pastille"><svg class="ic"><use href="#i-lock"/></svg>Votre résultat est prêt</div>
+      </div>
+
+      <form class="card form-card" id="form-contact" novalidate>
+        <h2>Débloquez votre diagnostic complet</h2>
+        <p class="sous">Il s'affiche ici dès que vous validez, sans attendre un email.</p>
+        <ul class="debloque">
+          <li><svg class="ic"><use href="#i-check"/></svg><span id="debloque-clients"></span></li>
+          <li><svg class="ic"><use href="#i-check"/></svg>Le chiffre d'affaires que ce budget peut générer</li>
+          <li><svg class="ic"><use href="#i-check"/></svg>Le seuil de rentabilité de votre budget Google</li>
+        </ul>
+        <div class="fields">
+          <div><label for="prenom">Prénom</label><input type="text" id="prenom" autocomplete="given-name" maxlength="100" required></div>
+          <div><label for="nom">Nom</label><input type="text" id="nom" autocomplete="family-name" maxlength="100" required></div>
+          <div class="full"><label for="email">Email</label><input type="email" id="email" autocomplete="email" maxlength="150" required></div>
+          <div class="full"><label for="telephone">Téléphone <span class="opt">(facultatif)</span></label><input type="tel" id="telephone" autocomplete="tel" maxlength="30"></div>
+        </div>
+        <div class="trap" aria-hidden="true"><label for="website">Ne pas remplir</label><input type="text" id="website" tabindex="-1" autocomplete="off"></div>
+        <div class="error" id="form-error" role="alert" hidden></div>
+        <div class="nav"><button class="btn btn-primary" id="btn-reveler" type="submit">Afficher mon diagnostic</button></div>
+        <p class="legal"><svg class="ic"><use href="#i-shield"/></svg><span id="legal"></span></p>
+      </form>
+
+      <div class="cta" id="cta" hidden>
+        <h2 style="color:#fff">Passons ces chiffres au réel, ensemble</h2>
+        <p>Ce diagnostic reste une estimation. Lors d'un audit offert, en direct, nous le confrontons à votre activité et à votre marché.</p>
+        <a class="btn btn-primary" id="cta-lien" target="_blank" rel="noopener">Réserver mon audit offert <svg class="ic" style="width:20px;height:20px"><use href="#i-arrow"/></svg></a>
+      </div>
+
+      <details class="methode">
+        <summary>Comment ce calcul est fait</summary>
+        <ul id="methode"></ul>
+      </details>
+      <div class="pied">
+        <span>Estimations indicatives basées sur vos réponses. Payment Flow garantit des demandes qualifiées, pas un nombre de ventes.</span>
+        <button class="linkbtn" id="btn-modifier" type="button">Modifier mes réponses</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+/* ---------- À compléter avant la mise en ligne ---------- */
+const CONFIG = {
+  ENDPOINT: '',        // URL de l'application Web Apps Script
+  LIEN_AUDIT: 'https://calendly.com/paymentfloww/prevuesiteweb',      // lien de réservation de l'audit offert
+  EMAIL_CONTACT: ''    // adresse affichée pour les demandes RGPD
+};
+
+/* ---------- Formatage français ---------- */
+const nf0 = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const eur = x => nf0.format(Math.round(x)) + ' €';
+// 1e-9 corrige la précision des décimales : 2,45 ne doit pas devenir 2,4
+const eur100 = x => nf0.format(Math.round(x / 100 + 1e-9) * 100) + ' €';
+const un = x => nf1.format(Math.round(x * 10 + 1e-9) / 10);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const $ = id => document.getElementById(id);
+
+/* ---------- Secteurs ---------- */
+// cpl : coût par demande estimé [prudent, central, haut], en euros
+function secteur(nom, ticket, cpl, demandeS, demandeP, rdv, signe) {
+  return {
+    nom, ticket, cpl, ticketAide: 'CA encaissé par client signé', demande: { s: demandeS, p: demandeP }, rdv,
+    signe: signe || { s: 'client signé', p: 'clients signés' }, unite: 'client', etape4: null
+  };
+}
+const secteurDevis = (nom, ticket, cpl) => secteur(nom, ticket, cpl, 'demande de devis', 'demandes de devis', 'RDV / devis envoyés');
+const SECTEURS = {
+  immo: {
+    nom: 'Immobilier', ticket: 10000, cpl: [50, 35, 25], ticketAide: 'Honoraires encaissés par vente',
+    demande: { s: "demande d'estimation", p: "demandes d'estimation" }, rdv: "RDV d'estimation",
+    signe: { s: 'mandat signé', p: 'mandats signés' }, unite: 'vente', etape4: [0.65, 0.70, 0.75]
+  },
+  btp: secteurDevis('Artisan / BTP', 5000, [50, 35, 25]),
+  energie: secteurDevis('Rénovation énergétique / solaire', 12000, [90, 60, 40]),
+  domicile: secteurDevis('Services à domicile', 800, [40, 25, 15]),
+  auto: secteurDevis('Automobile / garage', 1000, [35, 25, 15]),
+  b2b: secteur('Services aux entreprises (B2B)', 5000, [90, 60, 40], 'demande de contact', 'demandes de contact', 'RDV découverte'),
+  liberal: secteur('Professions libérales', 2000, [130, 80, 50], 'demande de contact', 'demandes de contact', 'premiers RDV'),
+  formation: secteur('Formation / coaching', 2000, [60, 35, 20], "demande d'information", "demandes d'information", 'appels découverte', { s: 'client inscrit', p: 'clients inscrits' }),
+  beaute: secteur('Esthétique / bien-être', 500, [40, 25, 15], 'demande de rendez-vous', 'demandes de rendez-vous', 'premiers RDV'),
+  autre: secteur('Autre secteur', 3000, [70, 45, 30], 'demande', 'demandes', 'RDV')
+};
+const ICONES = {
+  immo: '<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>',
+  btp: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.8-3.800a6 6 0 0 1-7.900 7.900l-6.900 6.900a2.100 2.100 0 0 1-3-3l6.900-6.900a6 6 0 0 1 7.900-7.900z"/>',
+  energie: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.900 4.900l1.400 1.400M17.700 17.700l1.400 1.400M2 12h2M20 12h2M4.900 19.100l1.400-1.400M17.700 6.300l1.400-1.400"/>',
+  domicile: '<path d="M3 11l9-8 9 8M5 9.500V21h14V9.500M10 21v-6h4v6"/>',
+  auto: '<path d="M5 17H3v-5l2-5h14l2 5v5h-2M9 17h6M3 12h18"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  b2b: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+  liberal: '<path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0z"/>',
+  formation: '<path d="M2 9l10-5 10 5-10 5zM6 11.500V17c3 2.500 9 2.500 12 0v-5.500"/>',
+  beaute: '<path d="M12 3l1.900 5.100L19 10l-5.100 1.900L12 17l-1.900-5.100L5 10l5.100-1.900zM19 16v4M17 18h4"/>',
+  autre: '<circle cx="6" cy="12" r="1.500"/><circle cx="12" cy="12" r="1.500"/><circle cx="18" cy="12" r="1.500"/>'
+};
+const TAUX_RDV = [0.30, 0.35, 0.40];
+const pluriel = (n, f) => Math.round(n * 10) / 10 >= 2 ? f.p : f.s;
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+/* ---------- Calcul (fonction pure) : prudent, central, haut ---------- */
+function diagnostiquer(p) {
+  const S = SECTEURS[p.secteur];
+  const etape4 = S.etape4 || [1, 1, 1];
+  const scenarios = [0, 1, 2].map(i => {
+    const closing = clamp(p.closing + (i - 1) * 5, 1, 95) / 100;
+    const rdv = p.demandes * TAUX_RDV[i];
+    const signes = rdv * closing;
+    const ventes = signes * etape4[i];
+    return { rdv, closing, signes, ventes, ca: ventes * p.ticket, tauxRdv: TAUX_RDV[i], etape4: etape4[i] };
+  });
+  const budgets = S.cpl.map(c => p.demandes * c);
+  return { scenarios, budgetCentral: budgets[1], budgetMax: budgets[0], budgetMin: budgets[2], moisCouverts: p.ticket / budgets[1] };
+}
+
+function runTests() {
+  const d = diagnostiquer({ secteur: 'btp', demandes: 20, ticket: 5000, closing: 35 });
+  const i = diagnostiquer({ secteur: 'immo', demandes: 20, ticket: 10000, closing: 35 });
+  const l = diagnostiquer({ secteur: 'liberal', demandes: 20, ticket: 2000, closing: 35 });
+  const checks = [
+    ['budget min', d.budgetMin, 500], ['budget central', d.budgetCentral, 700], ['budget max', d.budgetMax, 1000],
+    ['RDV', d.scenarios[1].rdv, 7], ['signés', d.scenarios[1].signes, 2.45], ['CA central', d.scenarios[1].ca, 12250],
+    ['CA prudent', d.scenarios[0].ca, 9000], ['CA haut', d.scenarios[2].ca, 16000], ['mois couverts', Math.round(d.moisCouverts * 100) / 100, 7.14],
+    ['ventes immo', Math.round(i.scenarios[1].ventes * 1000) / 1000, 1.715], ['CA immo', i.scenarios[1].ca, 17150],
+    ['budget libéral min', l.budgetMin, 1000], ['budget libéral central', l.budgetCentral, 1600], ['budget libéral max', l.budgetMax, 2600]
+  ];
+  const ko = checks.filter(([n, o, a]) => Math.abs(o - a) > 1e-6);
+  ko.forEach(([n, o, a]) => console.error('ÉCART ' + n + ' : obtenu ' + o + ', attendu ' + a));
+  console.log(ko.length ? 'ÉCHEC ' + ko.length + '/' + checks.length : 'OK — ' + checks.length + '/' + checks.length + ' tests passés');
+  return !ko.length;
+}
+
+/* ---------- Questions ---------- */
+const reponses = { secteur: null, demandes: 20, ticket: null, closing: 35 };
+let etape = 0, debloque = false;
+const NB_ETAPES = 4;
+
+function parseNum(s) { return parseFloat(String(s).replace(/[\s  €%]/g, '').replace(',', '.')); }
+
+function majRecap() {
+  const S = SECTEURS[reponses.secteur];
+  const dernier = document.body.dataset.mode === 'resultats' ? NB_ETAPES : etape;
+  const lignes = [
+    ['Secteur', dernier > 0 && S ? S.nom : '—'],
+    ['Objectif', dernier > 1 ? nf0.format(reponses.demandes) + ' demandes / mois' : '—'],
+    ['Ticket moyen', dernier > 2 ? eur(reponses.ticket) : '—'],
+    ['Closing', dernier > 3 ? nf0.format(reponses.closing) + ' %' : '—']
+  ];
+  $('recap').replaceChildren(...lignes.map(([t, v]) => {
+    const d = document.createElement('div'), a = document.createElement('dt'), b = document.createElement('dd');
+    a.textContent = t; b.textContent = v; d.append(a, b); return d;
+  }));
+}
+
+function champCurseur(titre, aide, cle, min, max, unite, reperes) {
+  $('step-body').innerHTML =
+    '<h2 tabindex="-1"><label for="val" style="font:inherit;margin:0">' + titre + '</label></h2>' +
+    '<div class="bigfield" style="margin-top:18px"><input type="text" inputmode="numeric" id="val" value="' + reponses[cle] + '"><span>' + unite + '</span></div>' +
+    '<input type="range" id="curseur" min="' + min + '" max="' + max + '" value="' + reponses[cle] + '" aria-label="' + titre + '">' +
+    (reperes ? '<div class="chips">' + reperes.map(r => '<button type="button" class="chip" data-v="' + r + '">' + r + '</button>').join('') + '</div>' : '') +
+    (aide ? '<div class="aide"><svg class="ic"><use href="#i-info"/></svg><span>' + aide + '</span></div>' : '') + navigation();
+  $('curseur').addEventListener('input', e => { $('val').value = e.target.value; });
+  $('val').addEventListener('input', e => { const v = parseNum(e.target.value); if (isFinite(v)) $('curseur').value = v; });
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => { $('val').value = c.dataset.v; $('curseur').value = c.dataset.v; }));
+}
+function navigation() {
+  return '<div class="error" id="err" role="alert" hidden></div><div class="nav">' +
+    '<button class="btn" type="button" id="prec">Retour</button>' +
+    '<button class="btn btn-primary" type="button" id="suiv">' + (etape === NB_ETAPES - 1 ? 'Voir mon estimation' : 'Continuer') + '</button></div>';
+}
+function erreur(msg) { const e = $('err'); e.textContent = msg; e.hidden = false; }
+
+function afficherEtape() {
+  document.body.dataset.mode = 'questions';
+  document.body.toggleAttribute('data-accueil', etape === 0);
+  $('questions').hidden = false; $('resultats').hidden = true;
+  $('bar').style.width = ((etape + 1) / NB_ETAPES * 100) + '%';
+  $('step-label').textContent = 'Question ' + (etape + 1) + ' sur ' + NB_ETAPES;
+  $('step-reste').textContent = etape === NB_ETAPES - 1 ? 'Dernière question' : '';
+  const S = SECTEURS[reponses.secteur], corps = $('step-body');
+  corps.classList.remove('entre'); void corps.offsetWidth; corps.classList.add('entre');
+  majRecap();
+  if (etape === 0) {
+    corps.innerHTML = '<h2 tabindex="-1">Quel est votre secteur ?</h2><p class="sous">Nous adaptons le calcul et le vocabulaire à votre activité.</p><div class="choices">' +
+      Object.keys(SECTEURS).map(k => '<button type="button" class="choice' + (reponses.secteur === k ? ' active' : '') + '" data-s="' + k + '"><span class="pastille"><svg class="ic" viewBox="0 0 24 24">' + ICONES[k] + '</svg></span>' + SECTEURS[k].nom + '</button>').join('') + '</div>';
+    document.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => {
+      if (reponses.secteur !== b.dataset.s) reponses.ticket = SECTEURS[b.dataset.s].ticket;
+      reponses.secteur = b.dataset.s; etape = 1; afficherEtape();
+    }));
+    return;
+  }
+  if (etape === 1) champCurseur('Combien de ' + S.demande.p + ' voulez-vous par mois ?', '', 'demandes', 5, 60, 'par mois', [10, 20, 30, 50]);
+  if (etape === 2) {
+    corps.innerHTML = '<h2 tabindex="-1"><label for="val" style="font:inherit;margin:0">Quel est votre ticket moyen ?</label></h2>' +
+      '<div class="bigfield" style="margin-top:18px"><input type="text" inputmode="numeric" id="val" value="' + reponses.ticket + '"><span>€</span></div>' +
+      '<div class="aide"><svg class="ic"><use href="#i-info"/></svg><span>' + S.ticketAide + '. Une estimation suffit.</span></div>' + navigation();
+  }
+  if (etape === 3) champCurseur('Sur 100 RDV, combien deviennent un ' + S.signe.s + ' ?',
+    'Un prospect venu de Google compare souvent 2-3 entreprises : son taux est en général plus bas que sur la recommandation.', 'closing', 5, 90, '%');
+  $('prec').addEventListener('click', () => { etape--; afficherEtape(); });
+  $('suiv').addEventListener('click', valider);
+  corps.querySelector('h2').focus({ preventScroll: true });
+}
+
+function valider() {
+  const v = parseNum($('val').value);
+  if (etape === 1) { if (!(v >= 1 && v <= 500)) return erreur('Indiquez un nombre entre 1 et 500.'); reponses.demandes = Math.round(v); }
+  if (etape === 2) { if (!(v > 0)) return erreur('Indiquez un montant supérieur à 0 €.'); reponses.ticket = v; }
+  if (etape === 3) { if (!(v >= 1 && v <= 95)) return erreur('Indiquez un taux entre 1 et 95 %.'); reponses.closing = v; }
+  if (etape < NB_ETAPES - 1) { etape++; afficherEtape(); } else afficherResultats();
+}
+
+/* ---------- Résultats ---------- */
+function afficherResultats() {
+  const S = SECTEURS[reponses.secteur], d = diagnostiquer(reponses);
+  document.body.dataset.mode = 'resultats';
+  document.body.removeAttribute('data-accueil');
+  $('questions').hidden = true; $('resultats').hidden = false;
+  majRecap();
+  $('res-budget-lbl').textContent = 'Votre budget Google pour ~' + nf0.format(reponses.demandes) + ' ' + pluriel(reponses.demandes, S.demande);
+  $('res-budget').textContent = eur100(d.budgetCentral);
+  $('res-budget-sub').textContent = 'soit environ ' + eur(d.budgetCentral / 30) + ' par jour';
+  $('jauge-point').style.left = ((d.budgetCentral - d.budgetMin) / (d.budgetMax - d.budgetMin) * 100) + '%';
+  $('jauge-min').textContent = 'Si tout va bien : ' + eur(d.budgetMin);
+  $('jauge-max').textContent = 'Prudent : ' + eur(d.budgetMax);
+  $('res-titre').textContent = debloque ? $('prenom').value.trim() + ', voici ce que ce budget peut vous rapporter' : 'Ce que ce budget peut vous rapporter';
+  $('debloque-clients').textContent = 'Le nombre de ' + S.signe.p + ' à attendre chaque mois';
+  $('form-contact').hidden = debloque;
+  $('cta').hidden = !debloque || !CONFIG.LIEN_AUDIT;
+  if (CONFIG.LIEN_AUDIT) $('cta-lien').href = CONFIG.LIEN_AUDIT;
+  // Avant déblocage, le flou porte sur des valeurs fictives : le vrai résultat n'est pas dans la page
+  $('verrou').classList.toggle('ferme', !debloque);
+  $('pastille').hidden = debloque;
+  $('zone-resultat').className = debloque ? '' : 'blurred';
+  $('zone-resultat').setAttribute('aria-hidden', debloque ? 'false' : 'true');
+  $('zone-resultat').innerHTML = debloque ? detail(S, d) : apercuFlou();
+  $('methode').innerHTML = [
+    'Budget Google = nombre de demandes × coût par demande, estimé pour votre secteur entre ' + eur(S.cpl[2]) + ' et ' + eur(S.cpl[0]) + ' (' + eur(S.cpl[1]) + ' en central).',
+    'Demande → RDV : 30 à 40 % (35 % en central).',
+    'RDV → signé : votre taux, de 5 points en dessous à 5 points au-dessus.'
+  ].concat(S.etape4 ? ['Mandat → vente : 65 à 75 % (70 % en central).'] : []).map(t => '<li>' + t + '</li>').join('');
+  window.scrollTo(0, 0);
+}
+
+function detail(S, d) {
+  const [p, c, h] = d.scenarios;
+  const mois = Math.round(d.moisCouverts * 10) / 10;
+  const parMois = Math.round(10 / d.moisCouverts) / 10;
+  const seuil = mois >= 1
+    ? '1 ' + S.unite + ' paie environ <b>' + nf1.format(mois) + ' mois</b> de budget Google.'
+    : 'Il faut environ <b>' + nf1.format(parMois) + ' ' + S.unite + (parMois >= 2 ? 's' : '') + ' par mois</b> pour payer le budget Google.';
+  const base = reponses.demandes;
+  let f = ligne(nf0.format(base), cap(pluriel(base, S.demande)), base, base) + taux(c.tauxRdv) +
+    ligne(nf0.format(Math.round(c.rdv)), cap(S.rdv), c.rdv, base) + taux(c.closing) +
+    ligne(un(c.signes), cap(pluriel(c.signes, S.signe)), c.signes, base);
+  if (S.etape4) f += taux(c.etape4) + ligne(un(c.ventes), c.ventes >= 2 ? 'Ventes' : 'Vente', c.ventes, base);
+  return '<div class="kpis">' +
+    kpi(cap(S.signe.p) + ' par mois', un(p.signes) + ' à ' + un(h.signes), 'central : ' + un(c.signes)) +
+    kpi('CA estimé par mois', eur100(p.ca) + ' à ' + eur100(h.ca), 'central : ' + eur100(c.ca)) + '</div>' +
+    '<div class="seuil"><div class="big">' + seuil + '</div><div class="sub">Seuil de rentabilité du budget Google, hors accompagnement.</div></div>' +
+    '<div class="card"><h2 style="margin-bottom:16px">Votre parcours mensuel</h2><div class="funnel">' + f + '</div></div>';
+}
+const kpi = (l, v, s) => '<div class="kpi"><div class="lbl">' + l + '</div><div class="val">' + v + '</div><div class="sub">' + s + '</div></div>';
+const ligne = (n, l, v, base) => '<div class="f-row"><div class="f-txt"><span>' + l + '</span><b>' + n + '</b></div><div class="f-bar"><div style="width:' + (v / base * 100) + '%"></div></div></div>';
+const taux = t => '<div class="f-rate">↓ ' + nf0.format(Math.round(t * 100)) + ' %</div>';
+const apercuFlou = () => '<div class="kpis">' + kpi('Clients par mois', '0,0 à 0,0', 'central : 0,0') + kpi('CA estimé par mois', '00 000 €', 'central : 00 000 €') + '</div>' +
+  '<div class="seuil" style="margin-bottom:0"><div class="big">1 client paie environ <b>0,0 mois</b> de budget Google.</div></div>';
+
+/* ---------- Envoi du lead ---------- */
+function construireLead() {
+  const S = SECTEURS[reponses.secteur], d = diagnostiquer(reponses), [p, c, h] = d.scenarios;
+  const q = new URLSearchParams(location.search);
+  const arr1 = x => Math.round(x * 10 + 1e-9) / 10;
+  return {
+    prenom: $('prenom').value.trim(), nom: $('nom').value.trim(), email: $('email').value.trim(), telephone: $('telephone').value.trim(), website: $('website').value,
+    secteur: S.nom, demandes: reponses.demandes, ticket: reponses.ticket, closing: reponses.closing,
+    budgetMin: Math.round(d.budgetMin), budgetCentral: Math.round(d.budgetCentral), budgetMax: Math.round(d.budgetMax), rdv: arr1(c.rdv),
+    signesMin: arr1(p.signes), signesCentral: arr1(c.signes), signesMax: arr1(h.signes),
+    caMin: Math.round(p.ca), caCentral: Math.round(c.ca), caMax: Math.round(h.ca), moisCouverts: arr1(d.moisCouverts),
+    utmSource: q.get('utm_source') || '', utmCampaign: q.get('utm_campaign') || '', utmContent: q.get('utm_content') || ''
+  };
+}
+
+async function envoyerLead(lead) {
+  if (!CONFIG.ENDPOINT) { console.warn('CONFIG.ENDPOINT vide : lead non envoyé', lead); return false; }
+  const ctrl = new AbortController();
+  const minuteur = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    // text/plain évite la requête préalable CORS, refusée par Apps Script
+    const r = await fetch(CONFIG.ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(lead), signal: ctrl.signal });
+    return (await r.json()).ok === true;
+  } catch (e) { console.error('Envoi du lead impossible', e); return false; } finally { clearTimeout(minuteur); }
+}
+
+$('form-contact').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('form-error'); err.hidden = true;
+  const mauvais = [
+    ['prenom', !$('prenom').value.trim()], ['nom', !$('nom').value.trim()],
+    ['email', !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim())]
+  ];
+  mauvais.forEach(([id, ko]) => { if (ko) $(id).setAttribute('aria-invalid', 'true'); else $(id).removeAttribute('aria-invalid'); });
+  const premier = mauvais.find(m => m[1]);
+  if (premier) { err.textContent = 'Indiquez votre prénom, votre nom et un email valide.'; err.hidden = false; $(premier[0]).focus(); return; }
+  const b = $('btn-reveler'); b.disabled = true; b.textContent = 'Un instant…';
+  await envoyerLead(construireLead());
+  // Le prospect obtient son résultat même si l'envoi échoue
+  debloque = true;
+  b.disabled = false; b.textContent = 'Afficher mon diagnostic';
+  afficherResultats();
+});
+$('btn-modifier').addEventListener('click', () => { etape = 1; afficherEtape(); });
+$('legal').textContent = 'Vos coordonnées servent uniquement à Payment Flow pour vous recontacter au sujet de ce diagnostic. Vous pouvez demander leur accès ou leur suppression' +
+  (CONFIG.EMAIL_CONTACT ? ' à ' + CONFIG.EMAIL_CONTACT : ' à tout moment') + '.';
+
+afficherEtape();
+runTests();
+</script>
+</body>
+</html>
